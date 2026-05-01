@@ -12,9 +12,6 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://trymaakhanastores.com',
-  'http://trymaakhanastores.com',
-  'https://www.trymaakhanastores.com',
-  'http://www.trymaakhanastores.com',
 ]
 
 app.use(cors({
