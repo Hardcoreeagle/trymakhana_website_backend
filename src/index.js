@@ -39,6 +39,4 @@ app.get('/health', async (req, res) => {
   }
 })
 
-app.get('/', (req, res) => res.json({ status: 'ok', message: 'Makhana backend running 🚀' }))
-
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
