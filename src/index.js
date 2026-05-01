@@ -1,54 +1,45 @@
-// src/index.js
 require('dotenv').config()
-const express = require('express')
-const cors    = require('cors')
-
-const ordersRouter   = require('./routes/orders')
+const express    = require('express')
+const cors       = require('cors')
+const pool       = require('./config/mysql')
 const productsRouter = require('./routes/products')
+const ordersRouter   = require('./routes/orders')
 
 const app  = express()
 const PORT = process.env.PORT || 4000
 
-// ── Middleware ─────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://trymaakhanastores.com',
+  'http://trymaakhanastores.com',
+  'https://www.trymaakhanastores.com',
+  'http://www.trymaakhanastores.com',
+]
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://trymaakhanastores.com'
-  ],
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
 }))
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
 
-// ── Routes ─────────────────────────────────────────────────────────────────
-app.use('/api/orders',   ordersRouter)
 app.use('/api/products', productsRouter)
+app.use('/api/orders',   ordersRouter)
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'MakhanaMagic API', timestamp: new Date().toISOString() })
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1')
+    res.json({ status: 'ok', db: 'mysql connected' })
+  } catch(e) {
+    res.status(500).json({ status: 'error', db: e.message })
+  }
 })
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` })
-})
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err)
-  res.status(500).json({ error: 'Internal server error' })
-})
-
-// ── Start ──────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`
-  ┌──────────────────────────────────────┐
-  │   🍿 MakhanaMagic API running        │
-  │   http://localhost:${PORT}               │
-  └──────────────────────────────────────┘
-  `)
-})
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
