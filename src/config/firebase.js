@@ -21,4 +21,6 @@ if (!admin.apps.length) {
   admin.initializeApp({ credential })
 }
 
-module.exports = admin
+const db = admin.firestore()
+
+module.exports = { db, admin }
